@@ -1,17 +1,48 @@
+const OWNER_UID = "100070180085781";
+let lockedGroupNames = {};
+
 module.exports.config = {
-	name: "groupname",
-	version: "1.0.0", 
-	hasPermssion: 0,
-	credits: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
-	description: "Rename your group",
-	commandCategory: "Box", 
-	usages: "groupname [name]", 
-	cooldowns: 0,
-	dependencies: [] 
+  name: "lockname",
+  version: "1.0.1",
+  hasPermssion: 0,
+  credits: "LOFER JASS x ChatGPT",
+  description: "Lock group name. If changed, bot resets it. Owner-only.",
+  commandCategory: "group",
+  usages: "lockname lock/unlock/reset",
+  cooldowns: 3
 };
 
-module.exports.run = async function({ api, event, args }) {
-	var name = args.join(" ")
-	if (!name) api.sendMessage("❌ You have not entered the group name you want to change", event.threadID, event.messageID)
-	else api.setTitle(name, event.threadID, () => api.sendMessage(`🔨 The bot changed the group name to: ${name}`, event.threadID, event.messageID));
-}
+module.exports.run = async ({ api, event, args }) => {
+  const { threadID, senderID } = event;
+  if (senderID !== OWNER_UID) return api.sendMessage("⛔ HT BHOXDI KE YE KAAM SIRF MERA ADMIN KR SKTA HAI!", threadID);
+
+  const subcmd = args[0]?.toLowerCase();
+  if (!subcmd) return api.sendMessage("⚠️ Usage: lockname lock/unlock/reset <name>", threadID);
+
+  switch (subcmd) {
+    case "lock": {
+      const name = args.slice(1).join(" ");
+      if (!name) return api.sendMessage("❗ Naam bhi do!\nUsage: lockname lock Rudra Army", threadID);
+      lockedGroupNames[threadID] = name;
+      await api.setTitle(name, threadID);
+      return api.sendMessage(`🔒 Group name lock ho gaya: ${name}`, threadID);
+    }
+
+    case "unlock": {
+      delete lockedGroupNames[threadID];
+      return api.sendMessage("🔓 Group name unlock ho gaya.", threadID);
+    }
+
+    case "reset": {
+      if (!lockedGroupNames[threadID]) return api.sendMessage("⚠️ Koi naam lock nahi hai.", threadID);
+      await api.setTitle(lockedGroupNames[threadID], threadID);
+      return api.sendMessage(`♻️ Group name wapas reset kiya: ${lockedGroupNames[threadID]}`, threadID);
+    }
+
+    default:
+      return api.sendMessage("⚠️ Usage: lockname lock/unlock/reset <name>", threadID);
+  }
+};
+
+module.exports.lockedNames = lockedGroupNames;
+		  
